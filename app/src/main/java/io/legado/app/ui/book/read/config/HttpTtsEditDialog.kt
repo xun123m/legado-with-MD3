@@ -54,6 +54,10 @@ class HttpTtsEditDialog() : BaseBottomSheetDialogFragment(R.layout.dialog_http_t
         }
         binding.tvLoginUi.addJsonPattern()
         binding.tvLoginCheckJs.addJsPattern()
+        binding.tvAudioRule.run {
+            addJsonPattern()
+            addJsPattern()
+        }
         binding.tvHeaders.run {
             addLegadoPattern()
             addJsonPattern()
@@ -75,6 +79,7 @@ class HttpTtsEditDialog() : BaseBottomSheetDialogFragment(R.layout.dialog_http_t
         binding.tvName.setText(httpTTS.name)
         binding.tvUrl.setText(httpTTS.url)
         binding.tvContentType.setText(httpTTS.contentType)
+        binding.tvAudioRule.setText(httpTTS.audioRule)
         binding.tvConcurrentRate.setText(httpTTS.concurrentRate)
         binding.tvLoginUrl.setText(httpTTS.loginUrl)
         binding.tvLoginUi.setText(httpTTS.loginUi)
@@ -124,6 +129,7 @@ class HttpTtsEditDialog() : BaseBottomSheetDialogFragment(R.layout.dialog_http_t
             name = binding.tvName.text.toString(),
             url = binding.tvUrl.text.toString(),
             contentType = binding.tvContentType.text?.toString(),
+            audioRule = binding.tvAudioRule.text?.toString(),
             concurrentRate = binding.tvConcurrentRate.text?.toString(),
             loginUrl = binding.tvLoginUrl.text?.toString(),
             loginUi = binding.tvLoginUi.text?.toString(),

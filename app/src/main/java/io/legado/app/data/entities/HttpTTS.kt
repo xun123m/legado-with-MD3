@@ -19,6 +19,7 @@ data class HttpTTS(
     var name: String = "",
     var url: String = "",
     var contentType: String? = null,
+    var audioRule: String? = null,
     @ColumnInfo(defaultValue = "0")
     override var concurrentRate: String? = "0",
     override var loginUrl: String? = null,
@@ -51,6 +52,7 @@ data class HttpTTS(
                     name = doc.readString("$.name")!!,
                     url = doc.readString("$.url")!!,
                     contentType = doc.readString("$.contentType"),
+                    audioRule = doc.readString("$.audioRule"),
                     concurrentRate = doc.readString("$.concurrentRate"),
                     loginUrl = doc.readString("$.loginUrl"),
                     loginUi = if (loginUi is List<*>) GSON.toJson(loginUi) else loginUi?.toString(),

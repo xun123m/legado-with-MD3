@@ -3,6 +3,7 @@ package io.legado.app.service
 import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.net.Uri
+import android.util.Base64
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
@@ -44,7 +45,9 @@ import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.ui.book.read.page.entities.TextChapter
 import io.legado.app.utils.FileUtils
 import io.legado.app.utils.MD5Utils
+import io.legado.app.utils.jsonPath
 import io.legado.app.utils.printOnDebug
+import io.legado.app.utils.readString
 import io.legado.app.utils.servicePendingIntent
 import io.legado.app.utils.toastOnUi
 import kotlinx.coroutines.CancellationException
@@ -61,6 +64,7 @@ import kotlinx.coroutines.sync.withLock
 import okhttp3.Response
 import org.mozilla.javascript.WrappedException
 import splitties.init.appCtx
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.InputStream
 import java.net.ConnectException
@@ -395,6 +399,12 @@ class HttpReadAloudService : BaseReadAloudService(),
                 if (checkJs?.isNotBlank() == true) {
                     response = analyzeUrl.evalJS(checkJs, response) as Response
                 }
+                httpTts.audioRule?.takeIf { it.isNotBlank() }?.let { audioRule ->
+                    currentCoroutineContext().ensureActive()
+                    val inputStream = response.extractAudioStream(analyzeUrl, audioRule)
+                    downloadErrorNo = 0
+                    return inputStream
+                }
                 response.headers["Content-Type"]?.let { contentType ->
                     val contentType = contentType.substringBefore(";")
                     val ct = httpTts.contentType
@@ -449,6 +459,47 @@ class HttpReadAloudService : BaseReadAloudService(),
             }
         }
         return null
+    }
+
+    private fun Response.extractAudioStream(
+        analyzeUrl: AnalyzeUrl,
+        audioRule: String
+    ): InputStream {
+        val bodyText = body.string()
+        val result = when {
+            audioRule.startsWith("@js:", true) -> {
+                analyzeUrl.evalJS(audioRule.substring(4), bodyText)
+            }
+
+            audioRule.startsWith("<js>", true) -> {
+                analyzeUrl.evalJS(audioRule.substring(4, audioRule.lastIndexOf("<")), bodyText)
+            }
+
+            else -> jsonPath.parse(bodyText).readString(audioRule)
+        }
+        val bytes = when (result) {
+            is ByteArray -> result
+            else -> decodeBase64Audio(result?.toString(), bodyText, audioRule)
+        }
+        return ByteArrayInputStream(bytes)
+    }
+
+    private fun decodeBase64Audio(
+        audioData: String?,
+        responseBody: String,
+        audioRule: String
+    ): ByteArray {
+        if (audioData.isNullOrBlank()) {
+            throw NoStackTraceException("TTS服务器返回错误，未能通过音频提取规则($audioRule)获取音频数据：$responseBody")
+        }
+        val base64Text = audioData
+            .substringAfter("base64,", audioData)
+            .trim()
+        return try {
+            Base64.decode(base64Text, Base64.DEFAULT)
+        } catch (e: IllegalArgumentException) {
+            throw NoStackTraceException("TTS服务器返回错误，音频数据不是有效的Base64：$responseBody")
+        }
     }
 
     /**

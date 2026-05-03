@@ -77,6 +77,21 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:hint="音频提取规则"
+                    tools:ignore="HardcodedText">
+
+                    <io.legado.app.ui.widget.code.CodeView
+                        android:id="@+id/tv_audio_rule"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="16dp"
+                        tools:ignore="TouchTargetSizeCheck,SpeakableTextPresentCheck" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:hint="@string/concurrent_rate"
                     tools:ignore="HardcodedText">
 
