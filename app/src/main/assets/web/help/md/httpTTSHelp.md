@@ -22,23 +22,23 @@ http://tts.baidu.com/text2audio,{
 url:
 https://api.xiaomimimo.com/v1/chat/completions,{
     "method": "POST",
-    "body": {
-        "model": {{JSON.stringify(source.getLoginInfoMap().get('Model') || 'mimo-v2.5-tts')}},
-        "messages": [
-            {
-                "role": "user",
-                "content": {{JSON.stringify(source.getLoginInfoMap().get('Style') || '以自然、清晰、适合长篇小说朗读的语气朗读。')}}
-            },
-            {
-                "role": "assistant",
-                "content": {{JSON.stringify(speakText)}}
-            }
-        ],
-        "audio": {
-            "format": "wav",
-            "voice": {{JSON.stringify(source.getLoginInfoMap().get('Voice') || 'mimo_default')}}
+    "body": {{(function(){
+        var info = source.getLoginInfoMap()
+        var model = info.get('Model') || 'mimo-v2.5-tts'
+        var audio = {format: 'wav'}
+        // VoiceDesign模型按官方示例不传voice; 普通TTS模型才传voice.
+        if (String(model).toLowerCase().indexOf('voicedesign') < 0) {
+            audio.voice = info.get('Voice') || 'mimo_default'
         }
-    }
+        var messages = []
+        messages.push({role: 'user', content: info.get('Style') || '以自然、清晰、适合长篇小说朗读的语气朗读。'})
+        messages.push({role: 'assistant', content: speakText})
+        var body = {}
+        body.model = model
+        body.messages = messages
+        body.audio = audio
+        return JSON.stringify(body)
+    })()}}
 }
 
 Content-Type:
